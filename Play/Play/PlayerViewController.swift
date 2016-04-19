@@ -81,7 +81,7 @@ class PlayerViewController: UIViewController {
                                            width / 15.0)
         playPauseButton.setImage(playImage, forState: UIControlState.Normal)
         playPauseButton.setImage(pauseImage, forState: UIControlState.Selected)
-        playPauseButton.addTarget(self, action: "playOrPauseTrack:",
+        playPauseButton.addTarget(self, action: #selector(PlayerViewController.playOrPauseTrack(_:)),
             forControlEvents: UIControlEvents.TouchUpInside)
         view.addSubview(playPauseButton)
         
@@ -91,7 +91,7 @@ class PlayerViewController: UIViewController {
                                           width / 15.0,
                                           width / 15.0)
         previousButton.setImage(previousImage, forState: UIControlState.Normal)
-        previousButton.addTarget(self, action: "previousTrackTapped:",
+        previousButton.addTarget(self, action: #selector(PlayerViewController.previousTrackTapped(_:)),
             forControlEvents: UIControlEvents.TouchUpInside)
         view.addSubview(previousButton)
 
@@ -101,7 +101,7 @@ class PlayerViewController: UIViewController {
                                       width / 15.0,
                                       width / 15.0)
         nextButton.setImage(nextImage, forState: UIControlState.Normal)
-        nextButton.addTarget(self, action: "nextTrackTapped:",
+        nextButton.addTarget(self, action: #selector(PlayerViewController.nextTrackTapped(_:)),
             forControlEvents: UIControlEvents.TouchUpInside)
         view.addSubview(nextButton)
 
@@ -130,7 +130,21 @@ class PlayerViewController: UIViewController {
         let track = tracks[currentIndex]
         let url = NSURL(string: "https://api.soundcloud.com/tracks/\(track.id)/stream?client_id=\(clientID)")!
         // FILL ME IN
-    
+        if sender.state == UIControlState.Normal {
+            player.pause()
+        }
+        if sender.state == UIControlState.Selected {
+            player.play()
+        }
+        
+        sender.selected = !sender.selected
+        
+       
+        
+        
+        // let item = AVPlayerItem(URL: url)
+        
+        
     }
     
     /* 
@@ -140,6 +154,17 @@ class PlayerViewController: UIViewController {
      * Remember to update the currentIndex
      */
     func nextTrackTapped(sender: UIButton) {
+        if currentIndex != tracks.count - 1 {
+            currentIndex = currentIndex + 1
+            let nextTrack = tracks[currentIndex]
+            let item = AVPlayerItem(URL: nextTrack.getURL())
+            player.replaceCurrentItemWithPlayerItem(item)
+            asyncLoadTrackImage(nextTrack)
+            artistLabel.text = nextTrack.artist
+            titleLabel.text = nextTrack.title
+            
+        }
+        
     
     }
 
@@ -154,7 +179,16 @@ class PlayerViewController: UIViewController {
      */
 
     func previousTrackTapped(sender: UIButton) {
-    
+        if let time = player.currentItem?.currentTime() {
+            // if past 3 seconds, seek to beginning of the track
+            if CMTimeGetSeconds(time) > 3 {
+                player.currentItem?.seekToTime(CMTime(seconds: 0.0, preferredTimescale: 0))
+            }
+            // try an play previous track
+            else {
+                
+            }
+        }
     }
     
     
