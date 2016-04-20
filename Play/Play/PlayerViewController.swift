@@ -24,6 +24,8 @@ class PlayerViewController: UIViewController {
     var artistLabel: UILabel!
     var titleLabel: UILabel!
     
+    var trackLoaded: Bool = false
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view = UIView(frame: UIScreen.mainScreen().bounds)
@@ -130,19 +132,26 @@ class PlayerViewController: UIViewController {
         let track = tracks[currentIndex]
         let url = NSURL(string: "https://api.soundcloud.com/tracks/\(track.id)/stream?client_id=\(clientID)")!
         // FILL ME IN
-        if sender.state == UIControlState.Normal {
+        if sender.selected {
             player.pause()
         }
-        if sender.state == UIControlState.Selected {
-            player.play()
+        else {
+            if trackLoaded == false {
+                let item = AVPlayerItem(URL: url)
+                player = AVPlayer(playerItem: item)
+                player.play()
+                trackLoaded = true
+            }
+            else {
+                player.play()
+            }
         }
-        
         sender.selected = !sender.selected
         
        
         
         
-        // let item = AVPlayerItem(URL: url)
+        
         
         
     }
@@ -157,15 +166,20 @@ class PlayerViewController: UIViewController {
         if currentIndex != tracks.count - 1 {
             currentIndex = currentIndex + 1
             let nextTrack = tracks[currentIndex]
-            let item = AVPlayerItem(URL: nextTrack.getURL())
-            player.replaceCurrentItemWithPlayerItem(item)
-            asyncLoadTrackImage(nextTrack)
-            artistLabel.text = nextTrack.artist
-            titleLabel.text = nextTrack.title
+            playTrackAndUpdateUI(nextTrack)
             
         }
         
+        
     
+    }
+    
+    func playTrackAndUpdateUI(track: Track) {
+        let item = AVPlayerItem(URL: track.getURL())
+        player.replaceCurrentItemWithPlayerItem(item)
+        asyncLoadTrackImage(track)
+        artistLabel.text = track.artist
+        titleLabel.text = track.title
     }
 
     /*
@@ -180,13 +194,15 @@ class PlayerViewController: UIViewController {
 
     func previousTrackTapped(sender: UIButton) {
         if let time = player.currentItem?.currentTime() {
-            // if past 3 seconds, seek to beginning of the track
+            // if more than 3 seconds, seek to beginning of the track
             if CMTimeGetSeconds(time) > 3 {
-                player.currentItem?.seekToTime(CMTime(seconds: 0.0, preferredTimescale: 0))
+                playTrackAndUpdateUI(tracks[currentIndex])
             }
             // try an play previous track
             else {
-                
+                currentIndex = currentIndex - 1
+                let previousTrack = tracks[currentIndex]
+                playTrackAndUpdateUI(previousTrack)
             }
         }
     }
